@@ -1,0 +1,40 @@
+# 数据集（约 4.9GB，需自行下载）
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 大型结果文件
+results/**/*.npz
+results/**/*.log
+results/smoke_*.log
+
+# 环境变量
+.env
+.env.local

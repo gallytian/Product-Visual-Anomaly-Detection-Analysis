@@ -1,0 +1,16 @@
+{
+  "image_auroc": 1.0,
+  "f1_max": 1.0,
+  "f1_threshold": 2.0906102657318115,
+  "pixel_auroc": 0.9853119393030043,
+  "aupro": 0.998213382671077,
+  "model": "patchcore",
+  "category": "bottle",
+  "fit_time_sec": 126.8,
+  "eval_time_sec": 24.5,
+  "num_test": 83,
+  "fit_patch_total": 163856,
+  "fit_bank_used": 40000,
+  "fit_memory_bank": 4000,
+  "fit_feature_dim": 1536
+}

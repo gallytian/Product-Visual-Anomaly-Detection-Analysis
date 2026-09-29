@@ -1,0 +1,16 @@
+{
+  "image_auroc": 0.9550000000000001,
+  "f1_max": 0.9503546099290779,
+  "f1_threshold": 78.45915985107422,
+  "pixel_auroc": 0.9761369850973018,
+  "aupro": 0.8680485712031246,
+  "model": "padim",
+  "category": "hazelnut",
+  "fit_time_sec": 63.8,
+  "eval_time_sec": 22.0,
+  "num_test": 110,
+  "fit_num_images": 391,
+  "fit_num_positions": 3136,
+  "fit_n_dims": 100,
+  "fit_total_dim": 1792
+}

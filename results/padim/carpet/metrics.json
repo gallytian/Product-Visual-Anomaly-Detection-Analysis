@@ -1,0 +1,16 @@
+{
+  "image_auroc": 0.9951845906902087,
+  "f1_max": 0.9944134078212291,
+  "f1_threshold": 40.43656921386719,
+  "pixel_auroc": 0.9830415689504819,
+  "aupro": 0.976632922511327,
+  "model": "padim",
+  "category": "carpet",
+  "fit_time_sec": 48.6,
+  "eval_time_sec": 22.4,
+  "num_test": 117,
+  "fit_num_images": 280,
+  "fit_num_positions": 3136,
+  "fit_n_dims": 100,
+  "fit_total_dim": 1792
+}

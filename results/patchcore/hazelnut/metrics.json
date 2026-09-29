@@ -1,0 +1,16 @@
+{
+  "image_auroc": 1.0,
+  "f1_max": 1.0,
+  "f1_threshold": 2.7989280223846436,
+  "pixel_auroc": 0.9869267570506601,
+  "aupro": 0.9327798985807327,
+  "model": "patchcore",
+  "category": "hazelnut",
+  "fit_time_sec": 149.5,
+  "eval_time_sec": 30.1,
+  "num_test": 110,
+  "fit_patch_total": 306544,
+  "fit_bank_used": 40000,
+  "fit_memory_bank": 4000,
+  "fit_feature_dim": 1536
+}

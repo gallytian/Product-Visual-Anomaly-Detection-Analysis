@@ -1,0 +1,963 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业异常检测项目</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; background: #f5f7fa; font-size: 14px; }
+        .top-nav { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); height: 56px; position: sticky; top: 0; z-index: 100; }
+        .top-nav h1 { font-size: 1.4em; font-weight: 600; }
+        .top-nav-links { display: flex; gap: 20px; }
+        .top-nav-links a { color: white; text-decoration: none; font-size: 0.9em; padding: 6px 12px; border-radius: 4px; transition: background 0.3s; }
+        .top-nav-links a:hover { background: rgba(255,255,255,0.2); }
+        .top-nav-links a.active { background: rgba(255,255,255,0.3); font-weight: 600; }
+        .content-area { padding: 25px; max-width: 1400px; margin: 0 auto; }
+        .content-section { display: none; background: white; border-radius: 8px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .content-section.active { display: block; }
+        h2 { color: #667eea; font-size: 1.5em; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
+        h3 { color: #764ba2; font-size: 1.2em; margin: 18px 0 10px 0; }
+        h4 { color: #555; font-size: 1em; margin: 12px 0 6px 0; }
+        p { margin-bottom: 10px; text-align: justify; line-height: 1.6; }
+        .info-box { background: #f8f9fa; border-left: 3px solid #667eea; padding: 12px 15px; margin: 12px 0; border-radius: 3px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 15px 0; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3); }
+        .stat-number { font-size: 1.8em; font-weight: bold; display: block; margin-bottom: 3px; }
+        .stat-label { font-size: 0.85em; opacity: 0.95; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em; }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
+        td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f8f9fa; }
+        tr:nth-child(even) { background: #fafafa; }
+        .structure-tree { background: #f8f9fa; padding: 12px 15px; border-radius: 6px; font-family: 'Courier New', monospace; line-height: 1.6; margin: 12px 0; font-size: 0.9em; }
+        .tree-item { padding-left: 15px; position: relative; }
+        .tree-item::before { content: "├─ "; color: #667eea; }
+        .tree-item:last-child::before { content: "└─ "; }
+        .highlight { color: #764ba2; font-weight: bold; }
+        .explore-card { background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .explore-card h4 { margin-top: 0; }
+        .chart-container { margin: 20px 0; text-align: center; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; }
+        .chart-container img { max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .chart-title { font-size: 1.1em; color: #667eea; margin: 15px 0 10px 0; font-weight: 600; }
+        .chart-description { color: #666; font-size: 0.9em; margin-bottom: 10px; line-height: 1.5; }
+        ul, ol { margin-left: 20px; margin-bottom: 10px; }
+        li { margin-bottom: 4px; }
+        code { background: #f8f9fa; padding: 1px 4px; border-radius: 2px; font-family: 'Courier New', monospace; color: #764ba2; font-size: 0.9em; }
+        .formula { text-align: center; background: #f8f9fa; padding: 12px 10px; border-radius: 4px; margin: 10px 0; }
+        .formula-note { font-size: 0.88em; color: #666; margin-top: 2px; }
+        .citation { background: #fff3cd; border-left: 3px solid #ffc107; padding: 10px 12px; margin: 12px 0; border-radius: 3px; }
+        .flow-diagram { padding: 20px 10px; overflow-x: auto; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 900px; }
+        .flow-node { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px 16px; text-align: center; min-width: 130px; transition: all 0.2s; }
+        .flow-node:hover { border-color: #667eea; box-shadow: 0 3px 10px rgba(102,126,234,0.15); transform: translateY(-2px); }
+        .flow-start { border-color: #48bb78; background: #f0fff4; }
+        .flow-end { border-color: #667eea; background: #f0f0ff; }
+        .flow-icon { font-size: 28px; margin-bottom: 6px; }
+        .flow-label { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 4px; }
+        .flow-desc { font-size: 12px; color: #888; }
+        .flow-arrow { font-size: 24px; color: #667eea; font-weight: bold; flex-shrink: 0; }
+        .flow-diagram h4 { color: #764ba2; font-size: 1em; margin: 16px 0 8px 0; }
+        .flow-diagram { padding: 20px 10px; overflow-x: auto; }
+        .flow-row { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 900px; }
+        .flow-node { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px 16px; text-align: center; min-width: 130px; transition: all 0.2s; }
+        .flow-node:hover { border-color: #667eea; box-shadow: 0 3px 10px rgba(102,126,234,0.15); transform: translateY(-2px); }
+        .flow-start { border-color: #48bb78; background: #f0fff4; }
+        .flow-end { border-color: #667eea; background: #f0f0ff; }
+        .flow-icon { font-size: 28px; margin-bottom: 6px; }
+        .flow-label { font-weight: 600; font-size: 14px; color: #333; margin-bottom: 4px; }
+        .flow-desc { font-size: 12px; color: #888; }
+        .flow-arrow { font-size: 24px; color: #667eea; font-weight: bold; flex-shrink: 0; }
+        .flow-diagram h4 { color: #764ba2; font-size: 1em; margin: 16px 0 8px 0; }
+    </style>
+    <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+</head>
+<body>
+    <div class="top-nav">
+        <h1>工业异常检测项目</h1>
+        <div class="top-nav-links">
+            <a href="#" onclick="showSection('project-intro')" class="active">项目介绍</a>
+            <a href="#" onclick="showSection('data-intro')">数据介绍</a>
+            <a href="#" onclick="showSection('project-structure')">项目结构</a>
+            <a href="#" onclick="showSection('tech-intro')">技术介绍</a>
+            <a href="#" onclick="showSection('algorithms')">算法原理</a>
+            <a href="#" onclick="showSection('modeling')">数据建模</a>
+            <a href="#" onclick="showSection('results')">实验结果</a>
+        </div>
+    </div>
+    <div class="content-area">
+        <div id="project-intro" class="content-section active">
+            <h2>项目介绍</h2>
+            <p>本项目旨在构建一个基于深度学习的工业异常检测系统，用于自动识别工业产品图像中的缺陷和异常。系统采用无监督学习方法，仅使用正常样本进行训练，能够检测出训练阶段未见过的各种缺陷类型。</p>
+            <div class="info-box">
+                <h3>项目目标</h3>
+                <ul>
+                    <li>实现 PatchCore 和 PaDiM 两种 SOTA 异常检测算法</li>
+                    <li>在 MVTec AD 数据集上进行训练和评估</li>
+                    <li>提供完整的实验对比分析和可视化结果</li>
+                    <li>输出可复现的实验报告和代码</li>
+                </ul>
+            </div>
+            <h3>应用场景</h3>
+            <p>工业异常检测广泛应用于制造业质量控制，包括：电子产品缺陷检测（PCB板、芯片、连接器）、纺织品质量检测（布料、皮革）、食品包装检测（瓶盖、胶囊）、金属零件检测（螺丝、螺母）、木材和建材检测。</p>
+            <h3>技术特点</h3>
+            <ul>
+                <li><strong>无监督学习：</strong>仅需正常样本训练，无需异常样本标注</li>
+                <li><strong>开集检测：</strong>能够检测训练阶段未见过的缺陷类型</li>
+                <li><strong>像素级定位：</strong>不仅判断图像是否异常，还能精确定位异常区域</li>
+                <li><strong>预训练模型：</strong>利用 DINOv2/CLIP 等视觉基础模型提取特征</li>
+            </ul>
+        </div>
+
+        <div id="data-intro" class="content-section">
+            <h2>MVTec AD 数据集介绍</h2>
+            <h3>数据集背景</h3>
+            <p><strong>MVTec AD（MVTec Anomaly Detection Dataset）</strong>是由德国 MVTec Software GmbH 公司发布的工业异常检测基准数据集。MVTec 是一家专注于机器视觉和图像处理技术的公司，在工业检测领域有着深厚的技术积累。</p>
+            <div class="info-box">
+                <h4>发布信息</h4>
+                <ul>
+                    <li><strong>发布时间：</strong>2019年</li>
+                    <li><strong>发布机构：</strong>MVTec Software GmbH（德国慕尼黑）</li>
+                    <li><strong>论文：</strong>"MVTec AD - A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection"</li>
+                    <li><strong>发表会议：</strong>IEEE Conference on Computer Vision and Pattern Recognition (CVPR) 2019</li>
+                    <li><strong>作者：</strong>Paul Bergmann, Michael Fauser, David Sattlegger, Carsten Steger</li>
+                    <li><strong>许可证：</strong>CC BY-NC-SA 4.0（知识共享署名-非商业性使用-相同方式共享 4.0 国际许可）</li>
+                </ul>
+            </div>
+            <h3>数据集意义</h3>
+            <p>MVTec AD 是工业异常检测领域最广泛使用的基准数据集之一，具有以下重要意义：</p>
+            <ul>
+                <li><strong>标准化基准：</strong>为异常检测算法提供了统一的评估标准</li>
+                <li><strong>真实场景：</strong>所有图像均来自真实工业场景，而非合成数据</li>
+                <li><strong>多样性：</strong>涵盖 15 个不同的工业产品类别，覆盖多种材质和缺陷类型</li>
+                <li><strong>精细标注：</strong>提供像素级的异常分割掩码，支持精确的异常定位评估</li>
+                <li><strong>广泛引用：</strong>已被数百篇学术论文引用，成为该领域的标准数据集</li>
+            </ul>
+            <h3>数据集规模</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">15</span>
+                    <span class="stat-label">产品类别</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">3,629</span>
+                    <span class="stat-label">训练图像</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">1,725</span>
+                    <span class="stat-label">测试图像</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">48</span>
+                    <span class="stat-label">缺陷类型</span>
+                </div>
+            </div>
+            <h3>数据集特点</h3>
+            <ul>
+                <li><strong>高分辨率：</strong>图像分辨率约为 1024×1024 像素</li>
+                <li><strong>真实缺陷：</strong>所有异常样本均为真实工业缺陷，非人工合成</li>
+                <li><strong>多样缺陷：</strong>包含划痕、裂纹、污染、变形、缺失等多种缺陷类型</li>
+                <li><strong>类别平衡：</strong>每个类别包含 200-400 张训练图像和 50-150 张测试图像</li>
+                <li><strong>像素级标注：</strong>每个异常样本都有对应的 ground truth 掩码</li>
+            </ul>
+            <div class="citation">
+                <h4>引用格式</h4>
+                <p style="font-family: 'Courier New', monospace; font-size: 0.85em;">
+                    Paul Bergmann, Michael Fauser, David Sattlegger, and Carsten Steger, 
+                    "A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection", 
+                    IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2019
+                </p>
+            </div>
+        
+            <hr style="border:none; border-top:2px solid #667eea; margin:30px 0;">
+<h2>数据探索</h2>
+            <h3>数据集统计分析</h3>
+            <div class="explore-card">
+                <h4>总体统计</h4>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">15</span>
+                        <span class="stat-label">产品类别</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">3,629</span>
+                        <span class="stat-label">训练图像</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">467</span>
+                        <span class="stat-label">测试正常</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">1,258</span>
+                        <span class="stat-label">测试异常</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">48</span>
+                        <span class="stat-label">缺陷类型</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>图像属性</h3>
+            <div class="explore-card">
+                <ul>
+                    <li><strong>尺寸范围：</strong>900×900 到 1024×1024 像素</li>
+                    <li><strong>颜色模式：</strong>RGB（彩色图像）</li>
+                    <li><strong>掩码模式：</strong>L（单通道灰度图）</li>
+                    <li><strong>文件格式：</strong>PNG</li>
+                </ul>
+            </div>
+            
+            <h3>各类别详细统计</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>类别</th>
+                        <th>中文</th>
+                        <th>训练集</th>
+                        <th>测试正常</th>
+                        <th>测试异常</th>
+                        <th>GT掩码</th>
+                        <th>缺陷类型数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>bottle</td><td>瓶子</td><td>209</td><td>20</td><td>63</td><td>63</td><td>3</td></tr>
+                    <tr><td>cable</td><td>电缆</td><td>224</td><td>58</td><td>92</td><td>92</td><td>8</td></tr>
+                    <tr><td>capsule</td><td>胶囊</td><td>219</td><td>23</td><td>109</td><td>109</td><td>5</td></tr>
+                    <tr><td>carpet</td><td>地毯</td><td>280</td><td>28</td><td>89</td><td>89</td><td>5</td></tr>
+                    <tr><td>grid</td><td>格栅</td><td>264</td><td>21</td><td>57</td><td>57</td><td>5</td></tr>
+                    <tr><td>hazelnut</td><td>榛子</td><td>391</td><td>40</td><td>70</td><td>70</td><td>4</td></tr>
+                    <tr><td>leather</td><td>皮革</td><td>245</td><td>32</td><td>92</td><td>92</td><td>5</td></tr>
+                    <tr><td>metal_nut</td><td>金属螺母</td><td>220</td><td>22</td><td>93</td><td>93</td><td>4</td></tr>
+                    <tr><td>pill</td><td>药片</td><td>267</td><td>26</td><td>141</td><td>141</td><td>7</td></tr>
+                    <tr><td>screw</td><td>螺丝</td><td>320</td><td>41</td><td>119</td><td>119</td><td>5</td></tr>
+                    <tr><td>tile</td><td>瓷砖</td><td>230</td><td>33</td><td>84</td><td>84</td><td>5</td></tr>
+                    <tr><td>toothbrush</td><td>牙刷</td><td>60</td><td>12</td><td>30</td><td>30</td><td>1</td></tr>
+                    <tr><td>transistor</td><td>晶体管</td><td>213</td><td>60</td><td>40</td><td>40</td><td>4</td></tr>
+                    <tr><td>wood</td><td>木材</td><td>247</td><td>19</td><td>60</td><td>60</td><td>5</td></tr>
+                    <tr><td>zipper</td><td>拉链</td><td>240</td><td>32</td><td>119</td><td>119</td><td>7</td></tr>
+                </tbody>
+            </table>
+            
+            <h3>关键发现</h3>
+            <div class="explore-card">
+                <ul>
+                    <li><strong>训练样本最多：</strong>hazelnut (391张)</li>
+                    <li><strong>训练样本最少：</strong>toothbrush (60张)</li>
+                    <li><strong>缺陷类型最多：</strong>cable (8种)</li>
+                    <li><strong>缺陷类型最少：</strong>toothbrush (1种)</li>
+                    <li><strong>异常样本最多：</strong>pill (141张)</li>
+                    <li><strong>异常样本最少：</strong>toothbrush (30张)</li>
+                </ul>
+            </div>
+            
+            <h3>可视化图表</h3>
+            
+            <div class="chart-container">
+                <div class="chart-title">1. 样本对比展示</div>
+                <div class="chart-description">展示正常样本与异常样本的对比，包括 Ground Truth 掩码和叠加效果</div>
+                <img src="results/visualization/01_sample_comparison.png" alt="样本对比展示">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">2. 图像尺寸分布</div>
+                <div class="chart-description">各类别图像的宽度和高度分布统计</div>
+                <img src="results/visualization/02_size_distribution.png" alt="图像尺寸分布">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">3. 颜色分布</div>
+                <div class="chart-description">RGB 三通道的像素值分布直方图</div>
+                <img src="results/visualization/03_color_distribution.png" alt="颜色分布">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">4. 缺陷类型分布</div>
+                <div class="chart-description">各类别缺陷类型数量的柱状图和饼图</div>
+                <img src="results/visualization/04_defect_distribution.png" alt="缺陷类型分布">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">5. 训练/测试样本对比</div>
+                <div class="chart-description">训练集、测试正常集、测试异常集的样本数量对比</div>
+                <img src="results/visualization/05_train_test_comparison.png" alt="训练测试样本对比">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">6. 亮度分布</div>
+                <div class="chart-description">正常图像与异常图像的亮度分布对比</div>
+                <img src="results/visualization/06_brightness_distribution.png" alt="亮度分布">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">7. 异常样本展示</div>
+                <div class="chart-description">多类别多缺陷类型的异常样本展示</div>
+                <img src="results/visualization/07_anomaly_samples.png" alt="异常样本展示">
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">8. 数据集总览</div>
+                <div class="chart-description">数据集整体统计信息，包括样本总数、正常/异常比例、缺陷类型分布等</div>
+                <img src="results/visualization/08_dataset_overview.png" alt="数据集总览">
+            </div>
+            
+            <h3>数据集结构</h3>
+            <div class="structure-tree">
+                <div class="highlight">mvtec_anomaly_detection/</div>
+                <div class="tree-item">bottle/</div>
+                <div class="tree-item">cable/</div>
+                <div class="tree-item">capsule/</div>
+                <div class="tree-item">carpet/</div>
+                <div class="tree-item">grid/</div>
+                <div class="tree-item">hazelnut/</div>
+                <div class="tree-item">leather/</div>
+                <div class="tree-item">metal_nut/</div>
+                <div class="tree-item">pill/</div>
+                <div class="tree-item">screw/</div>
+                <div class="tree-item">tile/</div>
+                <div class="tree-item">toothbrush/</div>
+                <div class="tree-item">transistor/</div>
+                <div class="tree-item">wood/</div>
+                <div class="tree-item">zipper/</div>
+            </div>
+            
+            <h3>每个类别的目录结构</h3>
+            <div class="structure-tree">
+                <div class="highlight">[category]/</div>
+                <div class="tree-item">train/good/ <span style="color: #666;">（正常样本，用于训练）</span></div>
+                <div class="tree-item">test/good/ <span style="color: #666;">（正常样本，用于测试）</span></div>
+                <div class="tree-item">test/[defect_type]/ <span style="color: #666;">（异常样本）</span></div>
+                <div class="tree-item">ground_truth/[defect_type]/ <span style="color: #666;">（像素级异常标注）</span></div>
+            </div>
+        </div>
+
+        <div id="project-structure" class="content-section">
+            <h2>项目结构</h2>
+            <h3>目录结构</h3>
+            <div class="structure-tree">
+                <div class="highlight">工业检测项目/</div>
+                <div class="tree-item">data/ <span style="color: #666;">（存放 MVTec AD 数据集，包含 15 个类别的训练和测试图像）</span></div>
+                <div class="tree-item">src/ <span style="color: #666;">（源代码目录，包含数据加载器、模型实现、评估指标等核心代码）</span></div>
+                <div class="tree-item">models/ <span style="color: #666;">（模型定义目录，包含 PatchCore、PaDiM 等算法实现）</span></div>
+                <div class="tree-item">scripts/ <span style="color: #666;">（可执行脚本：train.py 单类别实验、run_all.py 批量实验、analyze_results.py 结果分析、explore_dataset.py / visualize_dataset.py 数据探索）</span></div>
+                <div class="tree-item">notebooks/ <span style="color: #666;">（数据探索 notebook）</span></div>
+                <div class="tree-item">assets/ <span style="color: #666;">（静态资源：本地 MathJax，用于 HTML 文档公式渲染）</span></div>
+                <div class="tree-item">results/ <span style="color: #666;">（实验结果：各类别 metrics.json / scores.npz / 热力图，visualization/ 数据探索图表，analysis/ 对比图表与失败案例，summary.csv 汇总表）</span></div>
+                <div class="tree-item">reports/ <span style="color: #666;">（实验报告：experiment_report.md 完整报告，约 4500 字）</span></div>
+                <div class="tree-item">configs/ <span style="color: #666;">（配置文件目录，存放模型超参数、训练配置等 YAML 文件）</span></div>
+                <div class="tree-item">index.html <span style="color: #666;">（项目文档，包含项目介绍、数据说明、技术细节等）</span></div>
+                <div class="tree-item">requirements.txt <span style="color: #666;">（Python 依赖包列表，用于环境配置）</span></div>
+                <div class="tree-item">PROJECT_TASK.md <span style="color: #666;">（项目任务书，定义项目目标、技术要求和交付物）</span></div>
+            </div>
+
+            <h3>数据目录结构</h3>
+            <div class="structure-tree">
+                <div class="highlight">data/raw/mvtec_anomaly_detection/</div>
+                <div class="tree-item">[category]/ <span style="color: #666;">（如 bottle, cable 等）</span></div>
+                <div class="tree-item">train/good/ <span style="color: #666;">（正常样本，用于训练）</span></div>
+                <div class="tree-item">test/good/ <span style="color: #666;">（正常样本，用于测试）</span></div>
+                <div class="tree-item">test/[defect_type]/ <span style="color: #666;">（异常样本）</span></div>
+                <div class="tree-item">ground_truth/[defect_type]/ <span style="color: #666;">（像素级异常标注）</span></div>
+            </div>
+        </div>
+
+        <div id="tech-intro" class="content-section">
+            <h2>技术介绍</h2>
+            <h3>技术栈</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>层级</th>
+                        <th>技术</th>
+                        <th>职责</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>深度学习框架</td><td><strong>PyTorch 2.0+</strong></td><td>动态计算图，支持灵活的模型构建和调试</td></tr>
+                    <tr><td>预训练模型库</td><td><strong>Timm</strong>（PyTorch Image Models）</td><td>提供 700+ 预训练 CNN 模型，支持快速特征提取</td></tr>
+                    <tr><td>特征提取骨干</td><td><strong>Wide ResNet-50</strong>（ImageNet 预训练）</td><td>提取多尺度空间特征，用于异常检测</td></tr>
+                    <tr><td>异常检测算法</td><td><strong>PatchCore + PaDiM</strong></td><td>无监督异常检测，仅用正常样本训练，检测未知缺陷</td></tr>
+                    <tr><td>图像处理</td><td><strong>OpenCV + PIL</strong></td><td>图像读取、预处理、数据增强、掩码处理</td></tr>
+                    <tr><td>可视化</td><td><strong>Matplotlib + Seaborn</strong></td><td>异常热力图、统计图表、数据集分析可视化</td></tr>
+                    <tr><td>数值计算</td><td><strong>NumPy + SciPy</strong></td><td>矩阵运算、高斯分布建模、马氏距离计算</td></tr>
+                    <tr><td>配置管理</td><td><strong>PyYAML</strong></td><td>模型超参数、训练配置等 YAML 文件管理</td></tr>
+                    <tr><td>实验跟踪</td><td><strong>JSON + CSV</strong></td><td>实验结果记录、指标统计、可复现输出</td></tr>
+                </tbody>
+            </table>
+            
+            <h3>评估指标</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>指标</th>
+                        <th>全称</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Image AUROC</td><td>Area Under ROC Curve（图像级）</td><td>衡量图像级异常分类的整体性能，值越接近 1 越好</td></tr>
+                    <tr><td>Pixel AUROC</td><td>Area Under ROC Curve（像素级）</td><td>衡量像素级异常定位的精度，评估每个像素的分类能力</td></tr>
+                    <tr><td>AUPRO</td><td>Average Per-Region Overlap</td><td>区域级重叠度，衡量异常区域的检测质量，对连通区域更敏感</td></tr>
+                    <tr><td>F1-max</td><td>Maximum F1 Score</td><td>最佳 F1 分数，在最优阈值下平衡精确率和召回率</td></tr>
+                </tbody>
+            </table>
+
+            <h3>系统架构与运行时服务</h3>
+            <p style="color:#666; margin-bottom:12px;">训练阶段为一次性流程，推理服务为常驻服务。下图展示了系统上线后的完整服务架构。</p>
+            <div style="max-width:736px; margin:0 auto;"><svg viewBox="0 0 920 620" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #e5e7eb; border-radius:8px; background:#fafafa;">
+                <defs>
+                    <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+                        <path d="M1 1 L7 4 L1 7 Z" fill="#374151"/>
+                    </marker>
+                    <marker id="arr-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+                        <path d="M1 1 L7 4 L1 7 Z" fill="#9ca3af"/>
+                    </marker>
+                </defs>
+
+                <!-- System boundary -->
+                <rect x="180" y="30" width="720" height="560" rx="8" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="8,4"/>
+                <text x="540" y="52" text-anchor="middle" font-size="13" fill="#9ca3af" font-family="sans-serif">系统边界 · 工业异常检测平台</text>
+
+                <!-- External: Inspector -->
+                <rect x="30" y="120" width="120" height="56" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="90" y="144" text-anchor="middle" font-size="13" font-weight="600" fill="#92400e" font-family="sans-serif">质检员</text>
+                <text x="90" y="162" text-anchor="middle" font-size="11" fill="#a16207" font-family="sans-serif">上传 · 查看</text>
+
+                <!-- External: Admin -->
+                <rect x="30" y="300" width="120" height="56" rx="6" fill="#e0e7ff" stroke="#667eea" stroke-width="1.5"/>
+                <text x="90" y="324" text-anchor="middle" font-size="13" font-weight="600" fill="#3730a3" font-family="sans-serif">管理员</text>
+                <text x="90" y="342" text-anchor="middle" font-size="11" fill="#4338ca" font-family="sans-serif">配置 · 监控</text>
+
+                <!-- Frontend Vue3 -->
+                <rect x="220" y="100" width="150" height="70" rx="8" fill="#f0fdf4" stroke="#10b981" stroke-width="1.5"/>
+                <text x="295" y="128" text-anchor="middle" font-size="13" font-weight="600" fill="#065f46" font-family="sans-serif">前端 Vue 3</text>
+                <text x="295" y="148" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">检测面板 · SSE</text>
+                <text x="295" y="162" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">热力图展示</text>
+
+                <!-- FastAPI -->
+                <rect x="420" y="100" width="150" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="495" y="128" text-anchor="middle" font-size="13" font-weight="600" fill="#1e40af" font-family="sans-serif">FastAPI 服务</text>
+                <text x="495" y="148" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="sans-serif">业务 API · JWT</text>
+                <text x="495" y="162" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="sans-serif">任务调度</text>
+
+                <!-- Inference Engine -->
+                <rect x="620" y="100" width="150" height="70" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="695" y="128" text-anchor="middle" font-size="13" font-weight="600" fill="#6b21a8" font-family="sans-serif">推理引擎</text>
+                <text x="695" y="148" text-anchor="middle" font-size="11" fill="#7e22ce" font-family="sans-serif">PatchCore / PaDiM</text>
+                <text x="695" y="162" text-anchor="middle" font-size="11" fill="#7e22ce" font-family="sans-serif">PyTorch + GPU</text>
+
+                <!-- Pretrained Model (moved down) -->
+                <rect x="620" y="220" width="150" height="70" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+                <text x="695" y="248" text-anchor="middle" font-size="13" font-weight="600" fill="#9a3412" font-family="sans-serif">预训练模型</text>
+                <text x="695" y="268" text-anchor="middle" font-size="11" fill="#c2410c" font-family="sans-serif">Wide ResNet-50</text>
+                <text x="695" y="282" text-anchor="middle" font-size="11" fill="#c2410c" font-family="sans-serif">ImageNet 权重</text>
+
+                <!-- SQLite cylinder (moved down) -->
+                <g transform="translate(260, 370)">
+                    <ellipse cx="60" cy="10" rx="60" ry="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <rect x="0" y="10" width="120" height="50" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <ellipse cx="60" cy="60" rx="60" ry="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="60" y="32" text-anchor="middle" font-size="12" font-weight="600" fill="#1e40af" font-family="sans-serif">SQLite</text>
+                    <text x="60" y="48" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="sans-serif">检测记录 · 日志</text>
+                </g>
+
+                <!-- File Storage cylinder (moved down, repositioned) -->
+                <g transform="translate(460, 370)">
+                    <ellipse cx="60" cy="10" rx="60" ry="14" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                    <rect x="0" y="10" width="120" height="50" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                    <ellipse cx="60" cy="60" rx="60" ry="14" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="60" y="32" text-anchor="middle" font-size="12" font-weight="600" fill="#065f46" font-family="sans-serif">文件存储</text>
+                    <text x="60" y="48" text-anchor="middle" font-size="11" fill="#047857" font-family="sans-serif">图像 · 热力图</text>
+                </g>
+
+                <!-- External: Timm/ImageNet (moved down) -->
+                <rect x="620" y="470" width="150" height="50" rx="6" fill="#fff" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6,3"/>
+                <text x="695" y="494" text-anchor="middle" font-size="12" font-weight="600" fill="#6b7280" font-family="sans-serif">Timm / ImageNet</text>
+                <text x="695" y="510" text-anchor="middle" font-size="11" fill="#9ca3af" font-family="sans-serif">第三方 · 预训练权重</text>
+
+                <!-- Arrows -->
+                <!-- Inspector → Frontend -->
+                <path d="M150 148 C185 148, 185 135, 220 135" fill="none" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+                <!-- Admin → Frontend -->
+                <path d="M150 328 C185 328, 185 155, 220 155" fill="none" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+                <!-- Frontend → FastAPI -->
+                <path d="M370 135 L420 135" fill="none" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+                <text x="395" y="128" text-anchor="middle" font-size="10" fill="#6b7280" font-family="sans-serif">SSE · JWT</text>
+                <!-- FastAPI → Inference -->
+                <path d="M570 135 L620 135" fill="none" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+                <text x="595" y="128" text-anchor="middle" font-size="10" fill="#6b7280" font-family="sans-serif">推理请求</text>
+                <!-- FastAPI → SQLite -->
+                <path d="M495 170 C495 270, 320 320, 320 370" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)"/>
+                <text x="420" y="280" text-anchor="middle" font-size="10" fill="#3b82f6" font-family="sans-serif">读写</text>
+                <!-- Inference → File Storage -->
+                <path d="M695 170 C695 270, 520 320, 520 370" fill="none" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)"/>
+                <text x="620" y="280" text-anchor="middle" font-size="10" fill="#10b981" font-family="sans-serif">写入</text>
+                <!-- Inference → Pretrained Model -->
+                <path d="M695 170 L695 220" fill="none" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+                <text x="710" y="200" text-anchor="middle" font-size="10" fill="#a855f7" font-family="sans-serif">加载</text>
+                <!-- Pretrained Model → Timm (dashed, external) -->
+                <path d="M695 290 L695 470" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr-d)"/>
+                <text x="715" y="390" text-anchor="middle" font-size="10" fill="#9ca3af" font-family="sans-serif">下载权重</text>
+            </svg></div>
+        </div>
+
+                <div id="algorithms" class="content-section">
+            <h2>算法原理</h2>
+            <p>本项目实现两种基于预训练特征的无监督异常检测方法。两者的共同前提是：<strong>只用正常样本建模</strong>，测试时凡偏离"正常模式"的区域即判为异常。区别在于对"正常模式"的表示方式——PatchCore 用离散的记忆库，PaDiM 用连续的概率分布。</p>
+
+            <h3>机器学习定位</h3>
+            <p>这两个算法属于<strong>无监督学习 → 异常检测</strong>分支（也称单类分类、开集异常检测），由多层机器学习技术组合而成：</p>
+            <table>
+                <thead>
+                    <tr><th>层面</th><th>技术归属</th><th>在本项目中的体现</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>特征表示</td><td>监督学习 + 迁移学习</td><td>WRN-50-2 在 ImageNet（百万级标注图像）上监督训练；本项目冻结权重、仅复用其特征表示能力，不做微调</td></tr>
+                    <tr><td>学习范式</td><td>无监督学习（单类分类）</td><td>训练集仅含正常样本；目标不是区分已知类别，而是「描述正常模式」——偏离即异常</td></tr>
+                    <tr><td>建模方法</td><td>密度估计（经典统计机器学习）</td><td>PatchCore 记忆库 ≈ 非参数密度估计（KNN 思想）；PaDiM 高斯分布 ≈ 参数化密度估计（马氏距离）</td></tr>
+                    <tr><td>模型评估</td><td>机器学习评估方法论</td><td>AUROC（阈值无关）、AUPRO（区域级）、F1-max（最优阈值）</td></tr>
+                </tbody>
+            </table>
+
+            <h4>作用</h4>
+            <ul>
+                <li><strong>无缺陷样本即可部署：</strong>产线上异常样本稀少且类型不可预知，监督分类无法训练；这两类方法只需收集正常样本即可建模</li>
+                <li><strong>检测未知缺陷类型：</strong>不依赖「见过什么缺陷」，对训练时从未出现过的缺陷类型同样有效（开集检测能力）</li>
+                <li><strong>输出定位信息：</strong>不仅给出「是否异常」的图像级分数，还输出像素级热力图指出缺陷位置，可直接对接产线复检流程</li>
+                <li><strong>新产品快速迁移：</strong>换产线、换产品时无需重新设计特征或调参，只需重新采集一批正常样本重新建模（分钟级）</li>
+            </ul>
+
+            <h4>典型应用</h4>
+            <ul>
+                <li><strong>工业制造质检：</strong>PCB / 半导体表面检测、金属零件划痕凹坑、纺织布料瑕疵、玻璃与透明件检测、电子元器件组装——MVTec AD 数据集正来自这些真实场景（覆盖瓶、电缆、胶囊、地毯、金属螺母、螺丝、晶体管等 15 类产品）</li>
+                <li><strong>医疗影像：</strong>病灶与异常区域的筛查研究——同样是「正常样本易得、异常样本稀缺」的场景，方法可直接迁移</li>
+                <li><strong>其他场景：</strong>视频监控异常行为、遥感影像变化检测等「异常稀少且类型未知」的检测任务</li>
+            </ul>
+
+            <div class="info-box">
+                <h4>为什么整个过程没有梯度下降？</h4>
+                <p>这两个方法常被概括为「<strong>pretrained feature + classical statistical modeling</strong>」：用深度学习特征替代手工设计特征，再套用经典统计方法。代码中的 fit 过程实际是<strong>统计估计</strong>（存储代表性特征，或估计均值与协方差），不存在反向传播与权重更新——这与任务书中的可选算法 STFPM / FastFlow（需要真正梯度训练学生网络或归一化流）形成鲜明对比。</p>
+            </div>
+
+            <h3>PatchCore 算法</h3>
+            <div class="info-box">
+                <strong>论文：</strong>Towards Total Recall in Industrial Anomaly Detection（CVPR 2022）<br>
+                <strong>核心思想：</strong>把全部正常样本的 patch 特征压缩成一个"记忆库"，测试 patch 到记忆库的最近邻距离就是它的异常分数——离正常特征越远，越可能是缺陷。
+            </div>
+            <h4>算法流程</h4>
+            <ol>
+                <li><strong>多尺度特征提取：</strong>用 WRN-50-2 提取 layer2（512 维）与 layer3（1024 维）特征，上采样对齐后拼接为 1536 维——中层特征兼顾语义信息与空间细节</li>
+                <li><strong>局部邻域聚合：</strong>对拼接特征做 3×3 平均池化，把邻域上下文融入每个 patch，提升对局部形变的鲁棒性</li>
+                <li><strong>核心集采样（Coreset）：</strong>全部 patch 特征可达数十万条，直接全部保留会导致检索过慢。用贪心 k-center 策略选出最具代表性的 10%：每次选择"离已选集合最远"的样本，保证对整个正常特征空间的覆盖；距离计算先在 128 维随机投影空间进行以加速</li>
+                <li><strong>异常打分：</strong>测试 patch 在记忆库中检索 K=9 个最近邻，以最近邻距离为基础，并用近邻密度重加权：
+                    <div class="formula">
+                $$s(f) = \left( 1 - \frac{e^{d(m^*, f)}}{\sum_{i} e^{d(m_i, f)}} \right) \cdot d(m^*, f)$$
+            </div>
+                    其中 d(m*, f) 为最近邻距离。直观理解：若 K 个近邻距离彼此接近（说明记忆库中该处特征密集、正常样本本就多样），则降低该分数的置信度；若存在一个明显更近的邻居，则保持高分。</li>
+                <li><strong>异常图与图像级分数：</strong>patch 分数双线性上采样到输入尺寸，再做高斯平滑，得到平滑的异常热力图；图像级分数取热力图的最大值（一张图只要有一处明显异常，就判为异常）</li>
+            </ol>
+
+            <h3>PaDiM 算法</h3>
+            <div class="info-box">
+                <strong>论文：</strong>PaDiM: a Patch Distribution Modeling Framework for Anomaly Detection and Localization（ICPR 2021）<br>
+                <strong>核心思想：</strong>对每个 patch 位置单独建立一个多元高斯分布来刻画"该位置的正常特征长什么样"，测试时用马氏距离衡量实际特征偏离这个分布的程度。
+            </div>
+            <h4>算法流程</h4>
+            <ol>
+                <li><strong>多尺度特征提取：</strong>用 WRN-50-2 提取 layer1（256 维）+ layer2（512 维）+ layer3（1024 维）特征，上采样对齐后拼接为 1792 维——低层保留纹理细节，高层携带语义信息</li>
+                <li><strong>随机降维：</strong>从 1792 维中随机选择 d 个维度。论文在 WRN50 上取 d=550，本项目受 CPU 内存限制取 d=100（3,136 个位置 × 100×100 协方差矩阵已是 CPU 可承受的上限）</li>
+                <li><strong>高斯分布建模：</strong>对每个 patch 位置 (i,j)，用全部正常样本估计均值 μ<sub>ij</sub> 和协方差 Σ<sub>ij</sub>（协方差加 εI 正则化保证可逆，ε=0.01）。协方差矩阵记录了特征各维度间的相关性，这是相比"逐维方差"更精确的关键</li>
+                <li><strong>异常打分：</strong>测试 patch x<sub>ij</sub> 的马氏距离即异常分数：
+                    <div class="formula">
+                $$d(x_{ij}) = \sqrt{\, (x_{ij} - \mu_{ij})^{\top} \, \Sigma_{ij}^{-1} \, (x_{ij} - \mu_{ij}) \,}$$
+            </div>
+                    马氏距离等价于"按正常样本的分布形状归一化后的距离"——在高方差方向上的偏离会被弱化，在低方差方向上的偏离会被放大。</li>
+                <li><strong>异常图与图像级分数：</strong>马氏距离矩阵上采样 + 高斯平滑得到热力图，图像级分数同样取最大值</li>
+            </ol>
+
+            <h3>两种算法对比</h3>
+            <table>
+                <thead>
+                    <tr><th>维度</th><th>PatchCore</th><th>PaDiM</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>正常模式的表示</td><td>离散特征记忆库（4,000 个代表性 patch）</td><td>连续概率分布（3,136 个高斯分布）</td></tr>
+                    <tr><td>异常度量</td><td>KNN 最近邻距离 + 近邻密度重加权</td><td>马氏距离（利用特征相关性）</td></tr>
+                    <tr><td>特征层</td><td>layer2 + layer3（中层语义）</td><td>layer1 ~ layer3（全尺度细节）</td></tr>
+                    <tr><td>误差来源</td><td>核心集采样的覆盖度</td><td>降维带来的信息损失</td></tr>
+                    <tr><td>优势场景</td><td>结构复杂、缺陷细微（如电缆）</td><td>训练快、存储紧凑、简单缺陷</td></tr>
+                </tbody>
+            </table>
+
+            <h3>评估标准</h3>
+            <p>评估遵循 MVTec AD 论文的标准协议。整体设计围绕三个核心问题：<strong>「有没有异常」（判别粒度）、「阈值怎么定」（阈值依赖）、「对小缺陷和低误报是否公平」（类别不平衡与误报容忍）</strong>。四个指标的具体定义如下。</p>
+
+            <h4>1. Image AUROC（图像级 · 阈值无关）</h4>
+            <p>把每张测试图作为一个样本，用图像级异常分数做二分类，计算 ROC 曲线下面积：</p>
+            <div class="formula">
+                $$\mathrm{AUROC} = \int_{0}^{1} \mathrm{TPR} \, d(\mathrm{FPR})$$
+            </div>
+            <ul>
+                <li><strong>TPR</strong> = TP / (TP + FN)：异常图被正确识别的比例（召回率；TP 为异常图判对，FN 为漏检）</li>
+                <li><strong>FPR</strong> = FP / (FP + TN)：正常图被误判为异常的比例（误报率）</li>
+                <li>等价理解：随机取一张异常图和一张正常图，异常图分数更高的概率——0.5 相当于随机猜测，1.0 为完美排序</li>
+                <li><strong>阈值无关</strong>：衡量异常分数的排序能力，不需要预设判定阈值</li>
+            </ul>
+
+            <h4>2. Pixel AUROC（像素级 · 阈值无关）</h4>
+            <p>把异常图的每个像素作为一个样本，与 Ground Truth 掩码逐像素比较，汇总所有测试图的像素后计算——<strong>公式与 Image AUROC 完全相同，只是统计单元从「图」变为「像素」</strong>：</p>
+            <div class="formula">
+                $$\mathrm{AUROC}_{\mathrm{pixel}} = \int_{0}^{1} \mathrm{TPR} \, d(\mathrm{FPR})$$
+                <div class="formula-note">（统计单元 = 单个像素）</div>
+            </div>
+            <ul>
+                <li>衡量热力图能否准确指出缺陷所在的像素位置</li>
+                <li>注意<strong>大缺陷偏置</strong>：按像素统计时，大缺陷贡献的像素多、权重高，小而关键的缺陷漏检容易被掩盖（由 AUPRO 补正）</li>
+            </ul>
+
+            <h4>3. AUPRO（区域级 · 阈值无关）</h4>
+            <p>先对每个缺陷连通域计算重叠率，再对所有区域取平均，最后在低误报区间上积分：</p>
+            <div class="formula">
+                $$\begin{aligned}
+O_R(t) &= \frac{|\{\, p \in R : s(p) \geq t \,\}|}{|R|} \\
+\mathrm{PRO}(t) &= \frac{1}{N} \sum_{R} O_R(t) \\
+\mathrm{AUPRO} &= \frac{1}{0.3} \int_{0}^{0.3} \mathrm{PRO} \, d(\mathrm{FPR})
+\end{aligned}$$
+            </div>
+            <ul>
+                <li><strong>O<sub>R</sub>(t)</strong>：阈值 t 下，缺陷连通域 R 中被检出的像素比例（Per-Region Overlap）</li>
+                <li><strong>PRO</strong>：所有缺陷区域重叠率的平均——每个区域权重相同，与缺陷大小无关</li>
+                <li><strong>FPR ≤ 0.3</strong>：工业场景对误报容忍度低，评估聚焦低误报区间；积分后按区间长度归一化</li>
+            </ul>
+
+            <h4>4. F1-max（图像级 · 最优阈值）</h4>
+            <p>遍历所有判定阈值，取精确率与召回率调和平均的最大值：</p>
+            <div class="formula">
+                $$\begin{aligned}
+P &= \frac{TP}{TP + FP}, \qquad R = \frac{TP}{TP + FN} \\
+F_1 &= \frac{2PR}{P + R}, \qquad F_1\text{-max} = \max_{t} F_1(t)
+\end{aligned}$$
+            </div>
+            <ul>
+                <li><strong>P（精确率）</strong>：判为异常的图中真正异常的比例——误报越少越高</li>
+                <li><strong>R（召回率）</strong>：异常图中被检出的比例——漏检越少越高</li>
+                <li>回答的问题是「部署到产线后，最优阈值下能达到什么实际判别水平」——与 AUROC 的排序能力评估互补</li>
+            </ul>
+
+            <h4>指标参考区间（优良判断）</h4>
+            <p>各指标的「优良」参考区间如下（综合 MVTec AD 论文水平与工业实践经验）：</p>
+            <table>
+                <thead>
+                    <tr><th>指标</th><th>优秀</th><th>良好</th><th>可用</th><th>偏弱</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Image AUROC</strong></td><td>≥ 99%</td><td>97 ~ 99%</td><td>95 ~ 97%</td><td>&lt; 95%</td></tr>
+                    <tr><td><strong>Pixel AUROC</strong></td><td>≥ 98%</td><td>96 ~ 98%</td><td>93 ~ 96%</td><td>&lt; 93%</td></tr>
+                    <tr><td><strong>AUPRO</strong></td><td>≥ 95%</td><td>90 ~ 95%</td><td>85 ~ 90%</td><td>&lt; 85%</td></tr>
+                    <tr><td><strong>F1-max</strong></td><td>≥ 98%</td><td>95 ~ 98%</td><td>90 ~ 95%</td><td>&lt; 90%</td></tr>
+                </tbody>
+            </table>
+
+            <h4>参照系：数值意味着什么</h4>
+            <table>
+                <thead>
+                    <tr><th>参照点</th><th>Image AUROC</th><th>说明</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>随机猜测</td><td>50%</td><td>完全无判别能力</td></tr>
+                    <tr><td>传统方法（自编码器等）</td><td>85 ~ 95%</td><td>早期基线水平</td></tr>
+                    <tr><td>PaDiM（论文）</td><td>约 97.5%</td><td>2021 年 SOTA</td></tr>
+                    <tr><td>PatchCore（论文）</td><td>约 99.6%</td><td>2022 年 SOTA</td></tr>
+                </tbody>
+            </table>
+            <p style="color:#666; font-size:0.9em;">注：AUPRO 数值受实现口径影响（FPR 上界、平滑参数等），优良判断应以同一实现下的横向对比为主，论文数值仅作量级参考。</p>
+
+            <h4>优良判断原则</h4>
+            <ul>
+                <li><strong>看优先级：</strong>先看 Image AUROC（能否用）→ 再看 AUPRO（定位是否可信）→ 最后 F1-max（部署工作点）</li>
+                <li><strong>看最弱类别：</strong>均值再高，单个类别偏低就是产线上的漏洞（如 PaDiM 的 cable 仅 86.06%）</li>
+                <li><strong>看场景要求：</strong>产线若要求漏检率低于 0.1%，则召回须 ≥ 99.9%，此时「95% 良好」也可能不达标——业务指标优先于学术指标</li>
+                <li><strong>横向对比优先：</strong>同一数据集、同一实现口径下比较，比绝对数值更有参考意义</li>
+            </ul>
+            <div class="citation">
+                <h4>经验法则（图像级）</h4>
+                <p>90% 是「能用」线 → 95% 是「好用」线 → 99% 是「顶尖」线。</p>
+            </div>
+
+            <h4>评估设计的考虑维度</h4>
+            <table>
+                <thead>
+                    <tr><th>考虑维度</th><th>为什么这样考虑</th><th>对应设计</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>判别粒度</td><td>产线既需要「发现异常图」，也需要「指出缺陷位置」</td><td>图像级：Image AUROC、F1-max；像素 / 区域级：Pixel AUROC、AUPRO</td></tr>
+                    <tr><td>阈值依赖</td><td>分数排序能力与实际部署决策能力是两回事</td><td>阈值无关：AUROC 类指标；最优阈值：F1-max</td></tr>
+                    <tr><td>类别不平衡</td><td>异常像素占比通常不足 1%，准确率等指标会严重失真</td><td>AUROC 对类别不平衡不敏感；F1 聚焦正类（异常）</td></tr>
+                    <tr><td>缺陷尺寸公平</td><td>不能让大缺陷的像素权重掩盖小缺陷的漏检</td><td>AUPRO 按缺陷连通域平均，区域权重相同</td></tr>
+                    <tr><td>误报容忍度</td><td>工业场景误报成本高，需评估低误报区间的表现</td><td>AUPRO 限定在 FPR ≤ 0.3 区间积分</td></tr>
+                </tbody>
+            </table>
+
+            <div class="citation">
+                <h4>为什么需要 AUPRO？</h4>
+                <p>Pixel AUROC 按像素统计，大缺陷贡献的像素多、权重高，小缺陷的漏检容易被掩盖。而工业检测中「每个缺陷都重要」，不论大小。AUPRO 先按缺陷连通域计算重叠率、再对所有区域取平均，使每个缺陷区域权重相同，能更公平地反映区域级检出质量。</p>
+            </div>
+        </div>
+
+<div id="modeling" class="content-section">
+            <h2>数据建模</h2>
+            <p>本项目实现了两种主流的无监督异常检测方法（PatchCore 与 PaDiM），两者共享同一套流程：仅用正常样本完成「建模」，再对测试样本进行异常打分与定位。本模块介绍建模流程、环境配置与实现要点；<strong>实验结果、模型对比与最终结论见「实验结果」模块</strong>。</p>
+
+            <h3>建模流程</h3>
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node flow-start">
+                        <div class="flow-label">正常样本</div>
+                        <div class="flow-desc">train/good · 仅正常图</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node">
+                        <div class="flow-label">特征提取</div>
+                        <div class="flow-desc">WRN-50-2 · 多尺度特征</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node">
+                        <div class="flow-label">建模</div>
+                        <div class="flow-desc">记忆库 / 高斯分布</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node">
+                        <div class="flow-label">异常打分</div>
+                        <div class="flow-desc">KNN 距离 / 马氏距离</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node flow-end">
+                        <div class="flow-label">评估与可视化</div>
+                        <div class="flow-desc">AUROC · AUPRO · 热力图</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>环境与骨干网络</h3>
+            <div class="info-box">
+                <ul>
+                    <li><strong>运行环境：</strong>Python 3.12 + PyTorch 2.14（CPU 版，无 GPU）</li>
+                    <li><strong>骨干网络：</strong>torchvision 官方 Wide ResNet-50-2（ImageNet-1K 预训练权重），与两篇论文的官方实现一致</li>
+                    <li><strong>预处理：</strong>统一缩放至 224×224，ImageNet 均值/标准差归一化；<strong>不做数据增强</strong>——记忆库/分布建模需忠实反映真实正常样本的分布</li>
+                    <li><strong>训练方式：</strong>无监督，仅使用 train/good 正常样本；测试时对正常 + 各类缺陷样本打分</li>
+                </ul>
+            </div>
+
+            <h3>关键实现要点</h3>
+            <table>
+                <thead>
+                    <tr><th>模块</th><th>实现要点</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>PatchCore</strong></td><td>layer2+layer3 特征拼接（1536 维）→ 3×3 局部邻域聚合 → 随机投影（128 维）+ 贪心核心集采样压缩记忆库 → KNN 最近邻距离 + 近邻密度重加权</td></tr>
+                    <tr><td><strong>PaDiM</strong></td><td>layer1+layer2+layer3 特征拼接（1792 维）→ 随机降维至 100 维（CPU 适配，论文为 550）→ 每个 patch 位置估计完整协方差高斯分布（含 ε 正则化）→ 马氏距离</td></tr>
+                    <tr><td><strong>评估指标</strong></td><td>Image AUROC、Pixel AUROC、AUPRO（逐缺陷连通域重叠率积分，FPR ≤ 0.3）、F1-max</td></tr>
+                </tbody>
+            </table>
+
+            <h3>实验配置</h3>
+            <table>
+                <thead>
+                    <tr><th>参数</th><th>PatchCore</th><th>PaDiM</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>特征层</td><td>layer2 + layer3</td><td>layer1 + layer2 + layer3</td></tr>
+                    <tr><td>特征维度</td><td>1536</td><td>1792 → 100（随机降维）</td></tr>
+                    <tr><td>核心超参数</td><td>coreset_ratio = 0.1，K = 9</td><td>eps = 0.01</td></tr>
+                    <tr><td>记忆库 / 分布规模</td><td>4,000 个 patch 特征</td><td>3,136 个高斯分布</td></tr>
+                    <tr><td>输入尺寸</td><td colspan="2">224 × 224</td></tr>
+                    <tr><td>实验类别（5 类）</td><td colspan="2">bottle / cable / carpet / hazelnut / transistor</td></tr>
+                </tbody>
+            </table>
+
+            <h3>复现方式</h3>
+            <div class="structure-tree">
+                <div class="tree-item">单类别训练：<code>py scripts/train.py --model patchcore --category bottle</code></div>
+                <div class="tree-item">批量实验：<code>py scripts/run_all.py</code></div>
+                <div class="tree-item">结果输出：results/&lt;model&gt;/&lt;category&gt;/（metrics.json · scores.npz · visualizations/）</div>
+                <div class="tree-item">汇总文件：results/summary.csv · results/summary.md</div>
+            </div>
+        </div>
+
+        <div id="results" class="content-section">
+            <h2>实验结果</h2>
+            <p>在 5 个类别（bottle / cable / carpet / hazelnut / transistor）上对 PatchCore 与 PaDiM 进行了完整评估，评估指标为 Image AUROC、Pixel AUROC、AUPRO 与 F1-max。</p>
+
+            <h3>总体结果（5 类别平均）</h3>
+            <p>括号内为对照「算法原理 → 评估标准」参考区间给出的评级。</p>
+            <table>
+                <thead>
+                    <tr><th>模型</th><th>Image AUROC</th><th>Pixel AUROC</th><th>AUPRO</th><th>F1-max</th><th>平均建模耗时</th><th>综合</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>PatchCore</strong></td><td><strong>99.76%</strong>（优秀）</td><td><strong>98.45%</strong>（优秀）</td><td><strong>97.78%</strong>（优秀）</td><td><strong>98.89%</strong>（优秀）</td><td>131 s</td><td>全线优秀</td></tr>
+                    <tr><td><strong>PaDiM</strong></td><td>95.20%（可用）</td><td>97.39%（良好）</td><td>94.11%（良好）</td><td>92.88%（可用）</td><td>47 s</td><td>良好（受 cable 拖累）</td></tr>
+                </tbody>
+            </table>
+
+            <div class="info-box">
+                <h4>指标速览</h4>
+                <ul>
+                    <li><strong>Image AUROC</strong> —— 图像级判别能力：有缺陷的图是否被排在正常图之前（能否「拦住异常品」，最重要的指标）</li>
+                    <li><strong>Pixel AUROC</strong> —— 像素级定位精度：异常热力图与缺陷掩码在像素层面的吻合程度</li>
+                    <li><strong>AUPRO</strong> —— 区域级检出完整度：每个缺陷连通域被整体找出的比例（限定在低误报区间 FPR ≤ 0.3）</li>
+                    <li><strong>F1-max</strong> —— 最优阈值下的判别水平：部署产线时可实现的精确率与召回率平衡</li>
+                    <li><strong>平均建模耗时</strong> —— 单类别从特征提取到记忆库 / 分布估计完成的平均时间</li>
+                </ul>
+                <p style="margin:6px 0 0 0; color:#666; font-size:0.9em;">指标定义、公式与优良参考区间详见「算法原理 → 评估标准」。</p>
+            </div>
+
+            <h3>各类别明细</h3>
+            <table>
+                <thead>
+                    <tr><th>模型</th><th>类别</th><th>Image AUROC</th><th>Pixel AUROC</th><th>AUPRO</th><th>F1-max</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>PatchCore</td><td>bottle</td><td>1.0000</td><td>0.9853</td><td>0.9982</td><td>1.0000</td></tr>
+                    <tr><td>PatchCore</td><td>cable</td><td>0.9912</td><td>0.9856</td><td>0.9826</td><td>0.9681</td></tr>
+                    <tr><td>PatchCore</td><td>carpet</td><td>0.9976</td><td>0.9900</td><td>0.9894</td><td>0.9888</td></tr>
+                    <tr><td>PatchCore</td><td>hazelnut</td><td>1.0000</td><td>0.9869</td><td>0.9328</td><td>1.0000</td></tr>
+                    <tr><td>PatchCore</td><td>transistor</td><td>0.9992</td><td>0.9744</td><td>0.9857</td><td>0.9877</td></tr>
+                    <tr><td>PaDiM</td><td>bottle</td><td>1.0000</td><td>0.9832</td><td>0.9959</td><td>1.0000</td></tr>
+                    <tr><td>PaDiM</td><td>cable</td><td>0.8606</td><td>0.9522</td><td>0.8987</td><td>0.8286</td></tr>
+                    <tr><td>PaDiM</td><td>carpet</td><td>0.9952</td><td>0.9830</td><td>0.9766</td><td>0.9944</td></tr>
+                    <tr><td>PaDiM</td><td>hazelnut</td><td>0.9550</td><td>0.9761</td><td>0.8680</td><td>0.9504</td></tr>
+                    <tr><td>PaDiM</td><td>transistor</td><td>0.9492</td><td>0.9749</td><td>0.9664</td><td>0.8706</td></tr>
+                </tbody>
+            </table>
+
+            <h3>模型对比</h3>
+            <table>
+                <thead>
+                    <tr><th>对比维度</th><th>PatchCore</th><th>PaDiM</th><th>对比结论</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Image AUROC（平均）</td><td><strong>0.9976</strong></td><td>0.9520</td><td>PatchCore 领先 4.6 个百分点</td></tr>
+                    <tr><td>Pixel AUROC（平均）</td><td><strong>0.9845</strong></td><td>0.9739</td><td>差距仅 1.1 个百分点，定位能力接近</td></tr>
+                    <tr><td>AUPRO（平均）</td><td><strong>0.9778</strong></td><td>0.9411</td><td>PatchCore 对缺陷区域的检出更完整</td></tr>
+                    <tr><td>F1-max（平均）</td><td><strong>0.9889</strong></td><td>0.9288</td><td>PatchCore 判别的精确率/召回率更均衡</td></tr>
+                    <tr><td>最弱类别</td><td>cable（0.9912）</td><td>cable（0.8606）</td><td>细线缆结构对两者均为难点，PaDiM 受影响更大</td></tr>
+                    <tr><td>最强类别</td><td>bottle / hazelnut（1.0000）</td><td>bottle（1.0000）</td><td>简单类别两者均接近完美</td></tr>
+                    <tr><td>建模耗时</td><td>131 s</td><td>47 s</td><td>PaDiM 快约 3 倍，属于速度换精度的权衡</td></tr>
+                </tbody>
+            </table>
+
+            <h3>结果可视化</h3>
+
+            <h4>1. 指标对比</h4>
+            <div class="chart-container">
+                <div class="chart-title">两模型四项指标平均对比</div>
+                <div class="chart-description">PatchCore 在四项指标上全面领先，其中 Image AUROC 领先 4.6 个百分点</div>
+                <img src="results/analysis/01_model_comparison.png" alt="模型指标对比">
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">各类别 Image AUROC 对比</div>
+                <div class="chart-description">cable 类别是两模型的共同难点，PaDiM 在此类别上退化明显（86.06%）</div>
+                <img src="results/analysis/02_category_image_auroc.png" alt="各类别Image AUROC对比">
+            </div>
+
+            <h4>2. 检测结果（热力图）</h4>
+            <p>异常热力图展示模型对缺陷的定位能力（红色为高异常区域，第 3 列为 Ground Truth 掩码）：</p>
+
+            <div class="chart-container">
+                <div class="chart-title">PatchCore · bottle（污染缺陷）</div>
+                <div class="chart-description">异常热力图精准定位瓶口污染区域，与 Ground Truth 高度吻合</div>
+                <img src="results/patchcore/bottle/visualizations/sample_001.png" alt="PatchCore bottle">
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">PatchCore · cable（组合缺陷）</div>
+                <div class="chart-description">正确检出电缆组件的破损/缺失区域</div>
+                <img src="results/patchcore/cable/visualizations/sample_001.png" alt="PatchCore cable">
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">PatchCore · carpet（纹理缺陷）</div>
+                <div class="chart-description">纹理表面的缺陷定位</div>
+                <img src="results/patchcore/carpet/visualizations/sample_001.png" alt="PatchCore carpet">
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">PaDiM · cable（弱项）</div>
+                <div class="chart-description">细线缆结构上存在漏检——Ground Truth 中的多处缺陷未被热力图完全覆盖</div>
+                <img src="results/padim/cable/visualizations/sample_001.png" alt="PaDiM cable">
+            </div>
+
+            <h4>3. 失败案例分析</h4>
+            <p>按 F1 最优阈值对全部测试样本判定，统计误检（正常图判为异常）与漏检（异常图未检出）：</p>
+            <table>
+                <thead>
+                    <tr><th>模型</th><th>误检（正常判异常）</th><th>误检率</th><th>漏检（异常未检出）</th><th>漏检率</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>PatchCore</strong></td><td>7 / 206</td><td><strong>3.4%</strong></td><td>7 / 354</td><td><strong>2.0%</strong></td></tr>
+                    <tr><td><strong>PaDiM</strong></td><td>44 / 206</td><td>21.4%</td><td>16 / 354</td><td>4.5%</td></tr>
+                </tbody>
+            </table>
+            <div class="citation">
+                <h4>关键发现</h4>
+                <p>PaDiM 的主要问题不是「找不到缺陷」，而是「误报太多」——误检率达 21.4%，是 PatchCore 的约 6 倍。这与其 Pixel AUROC 尚可（0.9739）但 Image AUROC 偏低（0.9520）的现象一致：像素级定位能力尚可，但图像级判别被大量误报拖累。</p>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">PatchCore 失败案例</div>
+                <div class="chart-description">上排：误检案例（正常图被误判）｜下排：漏检案例（缺陷未检出，白线为缺陷真值边界）</div>
+                <img src="results/analysis/03_failure_cases_patchcore.png" alt="PatchCore失败案例">
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">PaDiM 失败案例</div>
+                <div class="chart-description">误检集中在 hazelnut / transistor（热力图高亮多出现在图像边缘与背景）；漏检集中在 carpet / cable（缺陷位置无响应）</div>
+                <img src="results/analysis/03_failure_cases_padim.png" alt="PaDiM失败案例">
+            </div>
+
+            <p><strong>失败模式归纳：</strong></p>
+            <ul>
+                <li><strong>误检模式</strong>：热力图高亮出现在图像边缘、背景或物体轮廓处——这些区域的特征方差估计不稳定，正常波动被放大为高马氏距离</li>
+                <li><strong>漏检模式</strong>：carpet 的纹理级细微变化与正常纹理统计差异小，现有特征分辨能力不足</li>
+                <li><strong>共同难点</strong>：hazelnut 的 AUPRO（PatchCore 0.9328 / PaDiM 0.8680）明显低于其 Image AUROC——异常图能检出，但缺陷区域定位不完整，与榛子表面缺陷边界模糊、GT 标注主观性有关</li>
+            </ul>
+
+            <h3>最终结论</h3>
+            <ul>
+                <li><strong>综合性能：</strong>PatchCore 在全部四项指标上领先，5 类平均 Image AUROC 达 99.76%，与论文报告水平（约 99.6%）一致，推荐作为首选方案</li>
+                <li><strong>PaDiM 的短板：</strong>结构复杂的 cable 类别上 Image AUROC 仅 86.06%；主要原因是 CPU 适配将特征维度从论文的 550 维降至 100 维，削弱了协方差对复杂结构的建模能力，恢复维度预计可显著提升</li>
+                <li><strong>定位与判别的差异：</strong>两者 Pixel AUROC 接近（98.45% vs 97.39%），PaDiM 的像素级定位尚可，主要差距集中在图像级判别</li>
+                <li><strong>速度与精度的权衡：</strong>PaDiM 建模速度约为 PatchCore 的 3 倍，适合对训练时间敏感、缺陷结构简单的场景；PatchCore 适合追求极致精度的场景</li>
+                <li><strong>共性规律：</strong>bottle 等对比度高的类别两者均接近完美；cable 等细结构类别是共同难点</li>
+            </ul>
+
+            <div class="info-box">
+                <h3>后续工作</h3>
+                <ul>
+                    <li>扩展实验类别（当前 5 类 → 全部 15 类）</li>
+                    <li>恢复 PaDiM 论文配置（特征维度 100 → 550），改善 cable 类别表现</li>
+                    <li>降低 PaDiM 误检率（增强正则化 / 图像级分数改用分位数统计）</li>
+                    <li>可选：STFPM / FastFlow 对比实现</li>
+                </ul>
+                <p style="margin:8px 0 0 0; color:#666; font-size:0.9em;">完整实验报告见 <code>reports/experiment_report.md</code>（约 4500 字，含 12 张图表与 7 篇参考文献）。</p>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.top-nav-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "patchcore": {
+    "num_normal": 206,
+    "num_anomaly": 354,
+    "false_positive": 7,
+    "false_negative": 7,
+    "false_positive_rate": 0.034,
+    "false_negative_rate": 0.0198
+  },
+  "padim": {
+    "num_normal": 206,
+    "num_anomaly": 354,
+    "false_positive": 44,
+    "false_negative": 16,
+    "false_positive_rate": 0.2136,
+    "false_negative_rate": 0.0452
+  }
+}

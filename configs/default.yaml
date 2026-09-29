@@ -1,0 +1,42 @@
+# 工业异常检测实验配置
+
+# 随机种子
+seed: 42
+
+dataset:
+  # 相对于项目根目录
+  root: data/raw/mvtec_anomaly_detection
+  # 预处理尺寸（论文分别为 224 / 256，这里统一 224）
+  resize: 224
+  batch_size: 8
+  num_workers: 2
+
+model:
+  patchcore:
+    # 骨干网络: torchvision 预训练 Wide ResNet-50-2 (ImageNet-1K)
+    # 论文使用 resnet layer2 + layer3
+    layers: [layer2, layer3]
+    coreset_ratio: 0.1
+    n_neighbors: 9
+    # CPU 适配: 贪心采样前的记忆库上限（论文不做截断）
+    max_bank_size: 40000
+    projection_dim: 128
+    smooth_sigma: 4.0
+
+  padim:
+    # 论文使用 resnet layer1 + layer2 + layer3
+    layers: [layer1, layer2, layer3]
+    # 论文 WRN50 取 550 维; CPU 适配降为 100 维（内存/时间考虑）
+    n_dims: 100
+    eps: 0.01
+    smooth_sigma: 4.0
+
+output:
+  # 相对于项目根目录
+  save_dir: results
+  # 每个类别每个模型生成的可视化数量
+  num_visualize: 6
+
+# 默认实验范围（任务书要求至少 5 个类别）
+categories: [bottle, cable, carpet, hazelnut, transistor]
+models: [patchcore, padim]

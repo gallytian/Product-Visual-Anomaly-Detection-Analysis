@@ -1,0 +1,16 @@
+{
+  "image_auroc": 0.9975922953451044,
+  "f1_max": 0.9887640449438202,
+  "f1_threshold": 1.745771050453186,
+  "pixel_auroc": 0.9900479497505632,
+  "aupro": 0.989449264491457,
+  "model": "patchcore",
+  "category": "carpet",
+  "fit_time_sec": 127.0,
+  "eval_time_sec": 30.9,
+  "num_test": 117,
+  "fit_patch_total": 219520,
+  "fit_bank_used": 40000,
+  "fit_memory_bank": 4000,
+  "fit_feature_dim": 1536
+}

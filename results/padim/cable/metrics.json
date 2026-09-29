@@ -1,0 +1,16 @@
+{
+  "image_auroc": 0.8605697151424287,
+  "f1_max": 0.8285714285714286,
+  "f1_threshold": 56.92633819580078,
+  "pixel_auroc": 0.9522189205384743,
+  "aupro": 0.8986604021360386,
+  "model": "padim",
+  "category": "cable",
+  "fit_time_sec": 40.1,
+  "eval_time_sec": 30.8,
+  "num_test": 150,
+  "fit_num_images": 224,
+  "fit_num_positions": 3136,
+  "fit_n_dims": 100,
+  "fit_total_dim": 1792
+}

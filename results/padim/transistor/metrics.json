@@ -1,0 +1,16 @@
+{
+  "image_auroc": 0.9491666666666667,
+  "f1_max": 0.8705882352941177,
+  "f1_threshold": 90.67244720458984,
+  "pixel_auroc": 0.9749265116890196,
+  "aupro": 0.9664393067640283,
+  "model": "padim",
+  "category": "transistor",
+  "fit_time_sec": 43.3,
+  "eval_time_sec": 20.8,
+  "num_test": 100,
+  "fit_num_images": 213,
+  "fit_num_positions": 3136,
+  "fit_n_dims": 100,
+  "fit_total_dim": 1792
+}

@@ -1,0 +1,16 @@
+{
+  "image_auroc": 0.9991666666666666,
+  "f1_max": 0.9876543209876543,
+  "f1_threshold": 2.3429975509643555,
+  "pixel_auroc": 0.9743788430817496,
+  "aupro": 0.9856965828149726,
+  "model": "patchcore",
+  "category": "transistor",
+  "fit_time_sec": 125.2,
+  "eval_time_sec": 26.5,
+  "num_test": 100,
+  "fit_patch_total": 166992,
+  "fit_bank_used": 40000,
+  "fit_memory_bank": 4000,
+  "fit_feature_dim": 1536
+}
